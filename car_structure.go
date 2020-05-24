@@ -121,7 +121,7 @@ func extectCode(positionCode string) (side string, axisNo, WheelNo int) {
 	return
 }
 
-func (cs *carStructure) GetJsonResult() (error, string) {
+func (cs *carStructure) GetJsonResult() (string, error) {
 
 	var summary Summanry
 	summary.AxisQTY = cs.GetAxisQTY()
@@ -182,10 +182,10 @@ func (cs *carStructure) GetJsonResult() (error, string) {
 	//แปลง struct to json format
 	b, err := json.Marshal(summary)
 	if err != nil {
-		return err, ""
+		return "", err
 	}
 
 	// fmt.Println(string(b))
 
-	return nil, string(b)
+	return string(b), nil
 }

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/ifrasoft/car_structure"
 )
 
@@ -72,6 +74,9 @@ func main() {
 			TireDepth:        1.0,
 		},
 	}
-	cs := car_structure.NewCarStructureConvertor("2S-4T-4T", carInformations)
-	cs.GetJsonResult()
+
+	carCode := "2S-4T-4T"
+	cs := car_structure.NewCarStructureConvertor(carCode, carInformations)
+	jsonResult, _ := cs.GetJsonResult()
+	fmt.Println(jsonResult)
 }
