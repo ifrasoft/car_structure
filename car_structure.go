@@ -2,6 +2,8 @@ package car_structure
 
 import (
 	"encoding/json"
+	"fmt"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -18,12 +20,23 @@ type Wheel struct {
 	Tires []Tire `json:"tires"`
 }
 
+type PolicyStatus struct {
+	TireDepth struct {
+		Status string `json:"status"`
+	} `json:"tireDepth"`
+	PSI struct {
+		Status string `json:"status"`
+	} `json:"psi"`
+}
+
 type Tire struct {
-	TireID           int64   `json:"TireID"`
-	Position         string  `json:"position"`
-	TireSerialNumber string  `json:"tireSerialNumber"`
-	TireDepth        float64 `json:"tireDepth"`
-	Turnable         bool    `json:"turnable"`
+	IsEmpty          bool         `json:"isEmpty"`
+	TireID           int64        `json:"tireID"`
+	Position         string       `json:"position"`
+	TireSerialNumber string       `json:"tireSerialNumber"`
+	TireDepth        float64      `json:"tireDepth"`
+	Turnable         bool         `json:"turnable"`
+	PolicyStatus     PolicyStatus `json:"policyStatus"`
 }
 
 type Summanry struct {
@@ -38,7 +51,7 @@ type carStructure struct {
 }
 
 type TireInformation struct {
-	TireID           int64   `json:"TireID"`
+	TireID           int64   `json:"tireID"`
 	PositionCode     string  `json:"position"`
 	TireSerialNumber string  `json:"tireSerialNumber"`
 	TireDepth        float64 `json:"tireDepth"`
@@ -104,10 +117,6 @@ func (cs *carStructure) GetWheelQTY() int {
 	return count
 }
 
-func (cs *carStructure) filTireInformation() {
-
-}
-
 func extectCode(positionCode string) (side string, axisNo, WheelNo int) {
 
 	data := strings.Split(positionCode, "-")
@@ -127,6 +136,8 @@ func (cs *carStructure) GetJsonResult() (string, error) {
 	summary.AxisQTY = cs.GetAxisQTY()
 	summary.WheelQTY = cs.GetWheelQTY()
 
+	codes := strings.Split(cs.TextIntput, "-")
+
 	for i := summary.AxisQTY; i >= 0; i-- {
 
 		//Add initial struct
@@ -134,15 +145,54 @@ func (cs *carStructure) GetJsonResult() (string, error) {
 			AxisID: int64(i),
 		})
 
+		///เพิ่ม default ล้อ กรณียังไม่มี
+		if i != 0 {
+
+			re := regexp.MustCompile("[0-9]+")
+			wheelQTY, _ := strconv.Atoi(re.FindAllString(codes[i-1], -1)[0])
+
+			for a := 0; a < len(summary.Axles); a++ {
+				if summary.Axles[a].AxisID == int64(i) {
+					for x := 1; x <= wheelQTY/2; x++ {
+						var tire = Tire{
+							IsEmpty:  true,
+							Position: fmt.Sprintf("%d-%s%d", i, "R", x),
+						}
+						summary.Axles[a].Right = append(summary.Axles[a].Right, tire)
+					}
+					break
+				}
+			}
+			for a := 0; a < len(summary.Axles); a++ {
+				if summary.Axles[a].AxisID == int64(i) {
+					for x := 1; x <= wheelQTY/2; x++ {
+						var tire = Tire{
+							IsEmpty:  true,
+							Position: fmt.Sprintf("%d-%s%d", i, "L", x),
+						}
+						summary.Axles[a].Left = append(summary.Axles[a].Left, tire)
+					}
+					break
+				}
+			}
+		}
+
 		for _, tireInformation := range cs.TireInformations {
 
 			side, axisNo, _ := extectCode(tireInformation.PositionCode)
+
+			var policyStatus PolicyStatus
+
+			policyStatus.PSI.Status = "good"
+			policyStatus.TireDepth.Status = "good"
+
 			var tire = Tire{
 				TireID:           tireInformation.TireID,
 				Position:         tireInformation.PositionCode,
 				TireSerialNumber: tireInformation.TireSerialNumber,
 				TireDepth:        tireInformation.TireDepth,
 				Turnable:         cs.Turnable(axisNo),
+				PolicyStatus:     policyStatus,
 			}
 
 			if axisNo == 0 { //ยางอะไหล่
@@ -159,14 +209,26 @@ func (cs *carStructure) GetJsonResult() (string, error) {
 				if side == "R" { //ด้านขวา
 					for a := 0; a < len(summary.Axles); a++ {
 						if summary.Axles[a].AxisID == int64(i) {
-							summary.Axles[a].Right = append(summary.Axles[a].Right, tire)
+							for index, r := range summary.Axles[a].Right {
+								if r.Position == tire.Position {
+									summary.Axles[a].Right[index] = tire
+									break
+								}
+
+							}
 							break
 						}
 					}
 				} else { //ด้านซ้าย
 					for a := 0; a < len(summary.Axles); a++ {
 						if summary.Axles[a].AxisID == int64(i) {
-							summary.Axles[a].Left = append(summary.Axles[a].Left, tire)
+							for index, l := range summary.Axles[a].Left {
+								if l.Position == tire.Position {
+									summary.Axles[a].Left[index] = tire
+									break
+								}
+
+							}
 							break
 						}
 					}
