@@ -1,15 +1,18 @@
 package car_structure
 
 import (
+	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 )
 
 type Axis struct {
-	AxisID int64  `json:"axisID"`
-	Left   []Tire `json:"left"`
-	Right  []Tire `json:"right"`
+	AxisID     int64  `json:"axisID"`
+	Left       []Tire `json:"left"`
+	Right      []Tire `json:"right"`
+	SpareWheel []Tire `json:"spareWheels"`
 }
 
 type Wheel struct {
@@ -49,6 +52,41 @@ func NewCarStructureConvertor(input string, tireInformations []*TireInformation)
 	}
 }
 
+func (sm *Summanry) Sort() {
+
+	for index, axle := range sm.Axles {
+		sort.SliceStable(axle.Left, func(i, j int) bool {
+			_, _, WheelNoi := extectCode(axle.Left[i].Position)
+			_, _, WheelNoj := extectCode(axle.Left[j].Position)
+			return WheelNoi < WheelNoj
+		})
+
+		sort.SliceStable(axle.Right, func(i, j int) bool {
+			_, _, WheelNoi := extectCode(axle.Right[i].Position)
+			_, _, WheelNoj := extectCode(axle.Right[j].Position)
+			return WheelNoi > WheelNoj
+		})
+
+		sm.Axles[index].Left = axle.Left
+		sm.Axles[index].Right = axle.Right
+	}
+
+}
+
+func (cs *carStructure) Turnable(axisNo int) bool {
+	axisLists := strings.Split(cs.TextIntput, "-")
+	for no, axis := range axisLists {
+		if axisNo == no+1 {
+			str := axis[1:2]
+			if str == "S" {
+				return true
+			}
+		}
+
+	}
+	return false
+}
+
 func (cs *carStructure) GetAxisQTY() int {
 	return len(strings.Split(cs.TextIntput, "-"))
 }
@@ -83,7 +121,7 @@ func extectCode(positionCode string) (side string, axisNo, WheelNo int) {
 	return
 }
 
-func (cs *carStructure) GetSummary() {
+func (cs *carStructure) GetJsonResult() (error, string) {
 
 	a := cs.GetAxisQTY()
 	fmt.Println("Axis QTY:", a)
@@ -100,48 +138,54 @@ func (cs *carStructure) GetSummary() {
 		for _, tireInformation := range cs.TireInformations {
 
 			side, axisNo, WheelNo := extectCode(tireInformation.PositionCode)
-			if axisNo == i {
+			var tire = Tire{
+				TireID:           tireInformation.TireID,
+				Position:         tireInformation.PositionCode,
+				TireSerialNumber: tireInformation.TireSerialNumber,
+				TireDepth:        tireInformation.TireDepth,
+				Turnable:         cs.Turnable(axisNo),
+			}
+
+			if axisNo == 0 { //ยางอะไหล่
+				for a := 0; a < len(summary.Axles); a++ {
+					if summary.Axles[a].AxisID == 0 {
+						summary.Axles[a].SpareWheel = append(summary.Axles[a].SpareWheel, tire)
+						break
+					}
+				}
+			}
+
+			if axisNo == i && i != 0 {
 				fmt.Println(tireInformation.PositionCode, side, WheelNo)
 
-				var tire = Tire{
-					TireID:           tireInformation.TireID,
-					Position:         tireInformation.PositionCode,
-					TireSerialNumber: tireInformation.TireSerialNumber,
-					TireDepth:        tireInformation.TireDepth,
-				}
-				if side == "R" {
+				if side == "R" { //ด้านขวา
 					for a := 0; a < len(summary.Axles); a++ {
 						if summary.Axles[a].AxisID == int64(i) {
 							summary.Axles[a].Right = append(summary.Axles[a].Right, tire)
 							break
 						}
 					}
-				} else {
+				} else { //ด้านซ้าย
 					for a := 0; a < len(summary.Axles); a++ {
 						if summary.Axles[a].AxisID == int64(i) {
-							summary.Axles[a].Right = append(summary.Axles[a].Right, tire)
+							summary.Axles[a].Left = append(summary.Axles[a].Left, tire)
 							break
 						}
 					}
 				}
 			}
 		}
-		// 	summary.Left = append(summary.Left, Wheel{
-		// 		AxisID: int64(i),
-		// 	})
-		// 	summary.Right = append(summary.Left, Wheel{
-		// 		AxisID: int64(i),
-		// 	})
+
 	}
 
-	// for _, tireInformation := range cs.TireInformations {
-	// 	side, axisNo, WheelNo := extectCode(tireInformation.PositionCode)
-	// 	if side == "R" {
-	// 		summary.Left[]
-	// 	} else {
+	summary.Sort()
 
-	// 	}
-	// }
+	b, err := json.Marshal(summary)
+	if err != nil {
+		return err, ""
+	}
 
-	fmt.Printf("%+v\n", summary)
+	fmt.Println(string(b))
+
+	return nil, string(b)
 }

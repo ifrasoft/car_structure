@@ -19,17 +19,18 @@ func main() {
 			TireDepth:        1.0,
 		},
 		&car_structure.TireInformation{
-			TireID:           3,
-			PositionCode:     "2-L1",
-			TireSerialNumber: "TireSerialNumber",
-			TireDepth:        1.0,
-		},
-		&car_structure.TireInformation{
 			TireID:           4,
 			PositionCode:     "2-L2",
 			TireSerialNumber: "TireSerialNumber",
 			TireDepth:        1.0,
 		},
+		&car_structure.TireInformation{
+			TireID:           3,
+			PositionCode:     "2-L1",
+			TireSerialNumber: "TireSerialNumber",
+			TireDepth:        1.0,
+		},
+
 		&car_structure.TireInformation{
 			TireID:           5,
 			PositionCode:     "2-R1",
@@ -64,7 +65,13 @@ func main() {
 			TireSerialNumber: "TireSerialNumber",
 			TireDepth:        1.0,
 		},
+		&car_structure.TireInformation{
+			TireID:           11,
+			PositionCode:     "0-B1",
+			TireSerialNumber: "TireSerialNumber",
+			TireDepth:        1.0,
+		},
 	}
-	cs := car_structure.NewCarStructureConvertor("2T-4T-4T", carInformations)
-	cs.GetSummary()
+	cs := car_structure.NewCarStructureConvertor("2S-4T-4T", carInformations)
+	cs.GetJsonResult()
 }
