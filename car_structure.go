@@ -35,6 +35,7 @@ type Tire struct {
 	Position         string       `json:"position"`
 	TireSerialNumber string       `json:"tireSerialNumber"`
 	TireDepth        float64      `json:"tireDepth"`
+	TirePressure     float64      `json:"tireDepth"`
 	Turnable         bool         `json:"turnable"`
 	PolicyStatus     PolicyStatus `json:"policyStatus"`
 }
@@ -48,13 +49,17 @@ type Summanry struct {
 type carStructure struct {
 	TextIntput       string
 	TireInformations []*TireInformation
+	Policies         []*Policy
 }
 
 type TireInformation struct {
-	TireID           int64   `json:"tireID"`
-	PositionCode     string  `json:"position"`
-	TireSerialNumber string  `json:"tireSerialNumber"`
-	TireDepth        float64 `json:"tireDepth"`
+	TireID              int64   `json:"tireID"`
+	PositionCode        string  `json:"position"`
+	TireSerialNumber    string  `json:"tireSerialNumber"`
+	TireDepthMaximum    float64 `json:"tireDepthMaximum"`
+	TireDepthMinimum    float64 `json:"tireDepthMinimum"`
+	TirePressureMaximum float64 `json:"tirePressureMaximum"`
+	TirePressureMinimum float64 `json:"tirePressureMinimum"`
 }
 
 func NewCarStructureConvertor(input string, tireInformations []*TireInformation) *carStructure {
@@ -62,6 +67,10 @@ func NewCarStructureConvertor(input string, tireInformations []*TireInformation)
 		TextIntput:       input,
 		TireInformations: tireInformations,
 	}
+}
+
+func (cs *carStructure) ApplyPolicies(policies []*Policy) {
+	cs.Policies = policies
 }
 
 func (sm *Summanry) Sort() {
@@ -183,14 +192,12 @@ func (cs *carStructure) GetJsonResult() (string, error) {
 
 			var policyStatus PolicyStatus
 
-			policyStatus.PSI.Status = "good"
-			policyStatus.TireDepth.Status = "good"
-
 			var tire = Tire{
 				TireID:           tireInformation.TireID,
 				Position:         tireInformation.PositionCode,
 				TireSerialNumber: tireInformation.TireSerialNumber,
-				TireDepth:        tireInformation.TireDepth,
+				TireDepth:        tireInformation.TireDepthMinimum,
+				TirePressure:     tireInformation.TirePressureMinimum,
 				Turnable:         cs.Turnable(axisNo),
 				PolicyStatus:     policyStatus,
 			}
@@ -205,6 +212,29 @@ func (cs *carStructure) GetJsonResult() (string, error) {
 			}
 
 			if axisNo == i && i != 0 { //Exclude axis 0
+
+				//เพิ่ม Policy
+				for _, policy := range cs.Policies {
+					if policy.AxlesNo == axisNo {
+						if tire.TireDepth <= policy.CriticalTireDepth {
+							tire.PolicyStatus.TireDepth.Status = "critical"
+						} else if tire.TireDepth <= policy.WarningTireDepth {
+							tire.PolicyStatus.TireDepth.Status = "warning"
+						} else {
+							tire.PolicyStatus.TireDepth.Status = "good"
+						}
+
+						diff := Abs(tire.TirePressure-policy.StandardTirePressure) / policy.StandardTirePressure * 100
+
+						if diff >= policy.CriticalTirePressure {
+							tire.PolicyStatus.PSI.Status = "critical"
+						} else if diff >= policy.WarningTirePressure {
+							tire.PolicyStatus.PSI.Status = "warning"
+						} else {
+							tire.PolicyStatus.PSI.Status = "good"
+						}
+					}
+				}
 
 				if side == "R" { //ด้านขวา
 					for a := 0; a < len(summary.Axles); a++ {
@@ -250,4 +280,11 @@ func (cs *carStructure) GetJsonResult() (string, error) {
 	// fmt.Println(string(b))
 
 	return string(b), nil
+}
+
+func Abs(x float64) float64 {
+	if x < 0 {
+		return -x
+	}
+	return x
 }
