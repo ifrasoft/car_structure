@@ -1,7 +1,6 @@
 package car_structure
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"sort"
@@ -139,7 +138,7 @@ func extectCode(positionCode string) (side string, axisNo, WheelNo int) {
 	return
 }
 
-func (cs *carStructure) GetJsonResult() (string, error) {
+func (cs *carStructure) GetJsonResult() (Summanry, error) {
 
 	var summary Summanry
 	summary.AxisQTY = cs.GetAxisQTY()
@@ -271,15 +270,11 @@ func (cs *carStructure) GetJsonResult() (string, error) {
 	//เรียงข้อมูล
 	summary.Sort()
 
-	//แปลง struct to json format
-	b, err := json.Marshal(summary)
-	if err != nil {
-		return "", err
-	}
+
 
 	// fmt.Println(string(b))
 
-	return string(b), nil
+	return summary, nil
 }
 
 func Abs(x float64) float64 {
