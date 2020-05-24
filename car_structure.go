@@ -1,7 +1,6 @@
 package car_structure
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"sort"
