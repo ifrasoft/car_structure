@@ -73,9 +73,15 @@ func main() {
 			TireSerialNumber: "TireSerialNumber",
 			TireDepth:        1.0,
 		},
+		&car_structure.TireInformation{
+			TireID:           1,
+			PositionCode:     "4-R1",
+			TireSerialNumber: "TireSerialNumber",
+			TireDepth:        1.0,
+		},
 	}
 
-	carCode := "2S-4T-4T"
+	carCode := "2S-4T-4T-2T"
 	cs := car_structure.NewCarStructureConvertor(carCode, carInformations)
 	jsonResult, _ := cs.GetJsonResult()
 	fmt.Println(jsonResult)
