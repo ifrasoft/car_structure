@@ -2,7 +2,6 @@ package car_structure
 
 import (
 	"encoding/json"
-	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -110,6 +109,7 @@ func (cs *carStructure) filTireInformation() {
 }
 
 func extectCode(positionCode string) (side string, axisNo, WheelNo int) {
+
 	data := strings.Split(positionCode, "-")
 	axisNo, _ = strconv.Atoi(data[0])
 	WheelNo, _ = strconv.Atoi(data[1][1:2])
@@ -123,21 +123,20 @@ func extectCode(positionCode string) (side string, axisNo, WheelNo int) {
 
 func (cs *carStructure) GetJsonResult() (error, string) {
 
-	a := cs.GetAxisQTY()
-	fmt.Println("Axis QTY:", a)
-
 	var summary Summanry
 	summary.AxisQTY = cs.GetAxisQTY()
 	summary.WheelQTY = cs.GetWheelQTY()
 
 	for i := summary.AxisQTY; i >= 0; i-- {
 
+		//Add initial struct
 		summary.Axles = append(summary.Axles, Axis{
 			AxisID: int64(i),
 		})
+
 		for _, tireInformation := range cs.TireInformations {
 
-			side, axisNo, WheelNo := extectCode(tireInformation.PositionCode)
+			side, axisNo, _ := extectCode(tireInformation.PositionCode)
 			var tire = Tire{
 				TireID:           tireInformation.TireID,
 				Position:         tireInformation.PositionCode,
@@ -155,8 +154,7 @@ func (cs *carStructure) GetJsonResult() (error, string) {
 				}
 			}
 
-			if axisNo == i && i != 0 {
-				fmt.Println(tireInformation.PositionCode, side, WheelNo)
+			if axisNo == i && i != 0 { //Exclude axis 0
 
 				if side == "R" { //ด้านขวา
 					for a := 0; a < len(summary.Axles); a++ {
@@ -178,14 +176,16 @@ func (cs *carStructure) GetJsonResult() (error, string) {
 
 	}
 
+	//เรียงข้อมูล
 	summary.Sort()
 
+	//แปลง struct to json format
 	b, err := json.Marshal(summary)
 	if err != nil {
 		return err, ""
 	}
 
-	fmt.Println(string(b))
+	// fmt.Println(string(b))
 
 	return nil, string(b)
 }
