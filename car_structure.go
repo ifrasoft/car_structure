@@ -1,6 +1,7 @@
 package car_structure
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"sort"
@@ -34,12 +35,12 @@ type Tire struct {
 	Position         string       `json:"position"`
 	TireSerialNumber string       `json:"tireSerialNumber"`
 	TireDepth        float64      `json:"tireDepth"`
-	TirePressure     float64      `json:"tireDepth"`
+	TirePressure     float64      `json:"tirePressure"`
 	Turnable         bool         `json:"turnable"`
 	PolicyStatus     PolicyStatus `json:"policyStatus"`
 }
 
-type Summanry struct {
+type Summary struct {
 	AxisQTY  int    `json:"axisQTY"`
 	WheelQTY int    `json:"wheelQTY"`
 	Axles    []Axis `json:"axis"`
@@ -72,7 +73,7 @@ func (cs *carStructure) ApplyPolicies(policies []*Policy) {
 	cs.Policies = policies
 }
 
-func (sm *Summanry) Sort() {
+func (sm *Summary) Sort() {
 
 	for index, axle := range sm.Axles {
 		sort.SliceStable(axle.Left, func(i, j int) bool {
@@ -138,9 +139,9 @@ func extectCode(positionCode string) (side string, axisNo, WheelNo int) {
 	return
 }
 
-func (cs *carStructure) GetJsonResult() (Summanry, error) {
+func (cs *carStructure) GetJsonResult() (Summary, error) {
 
-	var summary Summanry
+	var summary Summary
 	summary.AxisQTY = cs.GetAxisQTY()
 	summary.WheelQTY = cs.GetWheelQTY()
 
@@ -270,9 +271,12 @@ func (cs *carStructure) GetJsonResult() (Summanry, error) {
 	//เรียงข้อมูล
 	summary.Sort()
 
-
+	//แปลง struct to json format
+	b, _ := json.Marshal(summary)
 
 	// fmt.Println(string(b))
+
+	fmt.Println(string(b))
 
 	return summary, nil
 }

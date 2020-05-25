@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/ifrasoft/car_structure"
 )
 
@@ -163,7 +161,7 @@ func main() {
 
 	cs.ApplyPolicies(policies)
 
-	jsonResult, _ := cs.GetJsonResult()
+	cs.GetJsonResult()
 
-	fmt.Println(jsonResult)
+	// fmt.Println(jsonResult)
 }
