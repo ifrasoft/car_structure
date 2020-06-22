@@ -10,10 +10,11 @@ import (
 )
 
 type Axis struct {
-	AxisID     int64  `json:"axisID"`
-	Left       []Tire `json:"left"`
-	Right      []Tire `json:"right"`
-	SpareWheel []Tire `json:"spareWheels"`
+	AxisID      int64  `json:"axisID"`
+	Left        []Tire `json:"left"`
+	Right       []Tire `json:"right"`
+	SpareWheel  []Tire `json:"spareWheels"`
+	ImageBase64 string `json:"image"`
 }
 
 type Wheel struct {
@@ -263,7 +264,9 @@ func (cs *carStructure) GetJsonResult() (Summary, error) {
 						}
 					}
 				}
+
 			}
+
 		}
 
 	}
