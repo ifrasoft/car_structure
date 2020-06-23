@@ -334,7 +334,6 @@ func (cs *carStructure) GenerateImage(axisQTY int) string {
 }
 
 func InitWidthAndHeightImage(carType, hOrW string) int {
-
 	if hOrW == "width" {
 		if carType == "tractor" {
 			return 102
@@ -347,7 +346,6 @@ func InitWidthAndHeightImage(carType, hOrW string) int {
 		}
 		return 397
 	}
-
 }
 
 func Abs(x float64) float64 {
