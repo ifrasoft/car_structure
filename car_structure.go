@@ -1,12 +1,19 @@
 package car_structure
 
 import (
+	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"image"
+	"image/jpeg"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/oliamb/cutter"
 )
 
 type Axis struct {
@@ -51,6 +58,7 @@ type carStructure struct {
 	TextIntput       string
 	TireInformations []*TireInformation
 	Policies         []*Policy
+	CarType          string
 }
 
 type TireInformation struct {
@@ -72,6 +80,10 @@ func NewCarStructureConvertor(input string, tireInformations []*TireInformation)
 
 func (cs *carStructure) ApplyPolicies(policies []*Policy) {
 	cs.Policies = policies
+}
+
+func (cs *carStructure) InjectCarType(carType string) {
+	cs.CarType = carType
 }
 
 func (sm *Summary) Sort() {
@@ -152,7 +164,7 @@ func (cs *carStructure) GetJsonResult() (Summary, error) {
 
 		//Add initial struct
 		summary.Axles = append(summary.Axles, Axis{
-			AxisID: int64(i),
+			AxisID: int64(i), ImageBase64: cs.GenerateImage(i),
 		})
 
 		///เพิ่ม default ล้อ กรณียังไม่มี
@@ -282,6 +294,60 @@ func (cs *carStructure) GetJsonResult() (Summary, error) {
 	fmt.Println(string(b))
 
 	return summary, nil
+}
+
+func (cs *carStructure) GenerateImage(axisQTY int) string {
+
+	if axisQTY != 0 {
+		imageFile, err := os.Open("../image/" + cs.CarType + ".jpg")
+		if err != nil {
+			fmt.Println("img.jpg file not found!")
+		}
+		defer imageFile.Close()
+		img, _, err := image.Decode(imageFile)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		w := InitWidthAndHeightImage(cs.CarType, "width")
+		h := InitWidthAndHeightImage(cs.CarType, "height") / cs.GetAxisQTY()
+
+		croppedImg, err := cutter.Crop(img, cutter.Config{
+			Width:  w,
+			Height: h,
+			Anchor: image.Point{0, h * (axisQTY - 1)},
+		})
+		buf := new(bytes.Buffer)
+		opt := jpeg.Options{
+			Quality: 90,
+		}
+		err = jpeg.Encode(buf, croppedImg, &opt)
+		if err != nil {
+			fmt.Println(err)
+		}
+		imageBit := buf.Bytes()
+		return base64.StdEncoding.EncodeToString([]byte(imageBit))
+	}
+
+	return ""
+
+}
+
+func InitWidthAndHeightImage(carType, hOrW string) int {
+
+	if hOrW == "width" {
+		if carType == "tractor" {
+			return 102
+		}
+		return 83
+
+	} else {
+		if carType == "tractor" {
+			return 340
+		}
+		return 397
+	}
+
 }
 
 func Abs(x float64) float64 {
