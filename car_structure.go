@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"image"
 	"image/jpeg"
-	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -58,7 +57,7 @@ type carStructure struct {
 	TextIntput       string
 	TireInformations []*TireInformation
 	Policies         []*Policy
-	CarType          string
+	Image            image.Image
 }
 
 type TireInformation struct {
@@ -82,8 +81,8 @@ func (cs *carStructure) ApplyPolicies(policies []*Policy) {
 	cs.Policies = policies
 }
 
-func (cs *carStructure) InjectCarType(carType string) {
-	cs.CarType = carType
+func (cs *carStructure) InjectImageCarType(image image.Image) {
+	cs.Image = image
 }
 
 func (sm *Summary) Sort() {
@@ -299,20 +298,10 @@ func (cs *carStructure) GetJsonResult() (Summary, error) {
 func (cs *carStructure) GenerateImage(axisQTY int) string {
 
 	if axisQTY != 0 {
-		imageFile, err := os.Open("../image/" + cs.CarType + ".jpg")
-		if err != nil {
-			fmt.Println("img.jpg file not found!")
-		}
-		defer imageFile.Close()
-		img, _, err := image.Decode(imageFile)
-		if err != nil {
-			fmt.Println(err)
-		}
+		w := cs.Image.Bounds().Max.X
+		h := cs.Image.Bounds().Max.Y / cs.GetAxisQTY()
 
-		w := InitWidthAndHeightImage(cs.CarType, "width")
-		h := InitWidthAndHeightImage(cs.CarType, "height") / cs.GetAxisQTY()
-
-		croppedImg, err := cutter.Crop(img, cutter.Config{
+		croppedImg, err := cutter.Crop(cs.Image, cutter.Config{
 			Width:  w,
 			Height: h,
 			Anchor: image.Point{0, h * (axisQTY - 1)},
@@ -331,21 +320,6 @@ func (cs *carStructure) GenerateImage(axisQTY int) string {
 
 	return ""
 
-}
-
-func InitWidthAndHeightImage(carType, hOrW string) int {
-	if hOrW == "width" {
-		if carType == "tractor" {
-			return 102
-		}
-		return 83
-
-	} else {
-		if carType == "tractor" {
-			return 340
-		}
-		return 397
-	}
 }
 
 func Abs(x float64) float64 {

@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"image"
+	"os"
 
 	"github.com/ifrasoft/car_structure"
 )
@@ -163,7 +165,17 @@ func main() {
 
 	cs.ApplyPolicies(policies)
 
-	cs.InjectCarType("tractor")
+	imageFile, err := os.Open("../image/tractor.jpg")
+	if err != nil {
+		fmt.Println("img.jpg file not found!")
+	}
+	defer imageFile.Close()
+	img, _, err := image.Decode(imageFile)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	cs.InjectImageCarType(img)
 
 	jsonResult, _ := cs.GetJsonResult()
 
