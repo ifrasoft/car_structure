@@ -160,22 +160,52 @@ func main() {
 	}
 
 	carCode := "2S-4T-4T-2T"
+	carType := "tractor"
 
-	cs := car_structure.NewCarStructureConvertor(carCode, carInformations)
+	cs := car_structure.NewCarStructureConvertor(carCode, carType, carInformations)
 
 	cs.ApplyPolicies(policies)
 
-	imageFile, err := os.Open("../image/tractor.jpg")
+	Tractor, err := os.Open("../image/tractor-head.png")
 	if err != nil {
-		fmt.Println("img.jpg file not found!")
+		fmt.Println("img.png file not found!")
 	}
-	defer imageFile.Close()
-	img, _, err := image.Decode(imageFile)
+	defer Tractor.Close()
+	TractorH, _, err := image.Decode(Tractor)
+	if err != nil {
+		fmt.Println(err)
+	}
+	Trailer, err := os.Open("../image/trailer-head.png")
+	if err != nil {
+		fmt.Println("img.png file not found!")
+	}
+	defer Trailer.Close()
+	TrailerH, _, err := image.Decode(Trailer)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	cs.InjectImageCarType(img)
+	Center, err := os.Open("../image/center.png")
+	if err != nil {
+		fmt.Println("img.png file not found!")
+	}
+	defer Center.Close()
+	Body, _, err := image.Decode(Center)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	Foot, err := os.Open("../image/footer.png")
+	if err != nil {
+		fmt.Println("img.png file not found!")
+	}
+	defer Foot.Close()
+	Footer, _, err := image.Decode(Foot)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	cs.InjectImageCarType(TractorH, TrailerH, Body, Footer)
 
 	jsonResult, _ := cs.GetJsonResult()
 

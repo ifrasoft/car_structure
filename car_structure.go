@@ -6,13 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"image"
-	"image/jpeg"
+	"image/png"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
-
-	"github.com/oliamb/cutter"
 )
 
 type Axis struct {
@@ -57,7 +55,11 @@ type carStructure struct {
 	TextIntput       string
 	TireInformations []*TireInformation
 	Policies         []*Policy
-	Image            image.Image
+	HTractorImage    image.Image
+	HTrailerImage    image.Image
+	BodyImage        image.Image
+	FooterImage      image.Image
+	CarType          string
 }
 
 type TireInformation struct {
@@ -70,10 +72,11 @@ type TireInformation struct {
 	TirePressureMinimum float64 `json:"tirePressureMinimum"`
 }
 
-func NewCarStructureConvertor(input string, tireInformations []*TireInformation) *carStructure {
+func NewCarStructureConvertor(input, carType string, tireInformations []*TireInformation) *carStructure {
 	return &carStructure{
 		TextIntput:       input,
 		TireInformations: tireInformations,
+		CarType:          carType,
 	}
 }
 
@@ -81,8 +84,11 @@ func (cs *carStructure) ApplyPolicies(policies []*Policy) {
 	cs.Policies = policies
 }
 
-func (cs *carStructure) InjectImageCarType(image image.Image) {
-	cs.Image = image
+func (cs *carStructure) InjectImageCarType(HTractor, HTrailer, BodyCar, FooterCar image.Image) {
+	cs.HTractorImage = HTractor
+	cs.HTrailerImage = HTrailer
+	cs.BodyImage = BodyCar
+	cs.FooterImage = FooterCar
 }
 
 func (sm *Summary) Sort() {
@@ -163,7 +169,7 @@ func (cs *carStructure) GetJsonResult() (Summary, error) {
 
 		//Add initial struct
 		summary.Axles = append(summary.Axles, Axis{
-			AxisID: int64(i), ImageBase64: cs.GenerateImage(i),
+			AxisID: int64(i), ImageBase64: cs.GenerateImage(i, summary.AxisQTY, cs.CarType),
 		})
 
 		///เพิ่ม default ล้อ กรณียังไม่มี
@@ -288,29 +294,27 @@ func (cs *carStructure) GetJsonResult() (Summary, error) {
 	//แปลง struct to json format
 	b, _ := json.Marshal(summary)
 
-	// fmt.Println(string(b))
-
 	fmt.Println(string(b))
 
 	return summary, nil
 }
 
-func (cs *carStructure) GenerateImage(axisQTY int) string {
+func (cs *carStructure) GenerateImage(axisQTY, numAxis int, carType string) string {
 
 	if axisQTY != 0 {
-		w := cs.Image.Bounds().Max.X
-		h := cs.Image.Bounds().Max.Y / cs.GetAxisQTY()
-
-		croppedImg, err := cutter.Crop(cs.Image, cutter.Config{
-			Width:  w,
-			Height: h,
-			Anchor: image.Point{0, h * (axisQTY - 1)},
-		})
-		buf := new(bytes.Buffer)
-		opt := jpeg.Options{
-			Quality: 90,
+		var croppedImg image.Image
+		if axisQTY == numAxis {
+			croppedImg = cs.FooterImage
+		} else if axisQTY == 1 && carType == "tractor" {
+			croppedImg = cs.HTractorImage
+		} else if axisQTY == 1 && carType == "trailer" {
+			croppedImg = cs.HTrailerImage
+		} else {
+			croppedImg = cs.BodyImage
 		}
-		err = jpeg.Encode(buf, croppedImg, &opt)
+
+		buf := new(bytes.Buffer)
+		err := png.Encode(buf, croppedImg)
 		if err != nil {
 			fmt.Println(err)
 		}
