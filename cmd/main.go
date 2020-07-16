@@ -175,15 +175,15 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	Trailer, err := os.Open("../image/trailer-head.png")
-	if err != nil {
-		fmt.Println("img.png file not found!")
-	}
-	defer Trailer.Close()
-	TrailerH, _, err := image.Decode(Trailer)
-	if err != nil {
-		fmt.Println(err)
-	}
+	// Trailer, err := os.Open("../image/trailer-head.png")
+	// if err != nil {
+	// 	fmt.Println("img.png file not found!")
+	// }
+	// defer Trailer.Close()
+	// TrailerH, _, err := image.Decode(Trailer)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
 
 	Center, err := os.Open("../image/center.png")
 	if err != nil {
@@ -205,7 +205,7 @@ func main() {
 		fmt.Println(err)
 	}
 
-	cs.InjectImageCarType(TractorH, TrailerH, Body, Footer)
+	cs.InjectImageCarType(TractorH, Body, Footer)
 
 	jsonResult, _ := cs.GetJsonResult()
 

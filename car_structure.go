@@ -55,8 +55,7 @@ type carStructure struct {
 	TextIntput       string
 	TireInformations []*TireInformation
 	Policies         []*Policy
-	HTractorImage    image.Image
-	HTrailerImage    image.Image
+	HeaderImage      image.Image
 	BodyImage        image.Image
 	FooterImage      image.Image
 	CarType          string
@@ -84,9 +83,8 @@ func (cs *carStructure) ApplyPolicies(policies []*Policy) {
 	cs.Policies = policies
 }
 
-func (cs *carStructure) InjectImageCarType(HTractor, HTrailer, BodyCar, FooterCar image.Image) {
-	cs.HTractorImage = HTractor
-	cs.HTrailerImage = HTrailer
+func (cs *carStructure) InjectImageCarType(HeaderCar, BodyCar, FooterCar image.Image) {
+	cs.HeaderImage = HeaderCar
 	cs.BodyImage = BodyCar
 	cs.FooterImage = FooterCar
 }
@@ -169,7 +167,7 @@ func (cs *carStructure) GetJsonResult() (Summary, error) {
 
 		//Add initial struct
 		summary.Axles = append(summary.Axles, Axis{
-			AxisID: int64(i), ImageBase64: cs.GenerateImage(i, summary.AxisQTY, cs.CarType),
+			AxisID: int64(i), ImageBase64: cs.GenerateImage(i, summary.AxisQTY),
 		})
 
 		///เพิ่ม default ล้อ กรณียังไม่มี
@@ -299,16 +297,14 @@ func (cs *carStructure) GetJsonResult() (Summary, error) {
 	return summary, nil
 }
 
-func (cs *carStructure) GenerateImage(axisQTY, numAxis int, carType string) string {
+func (cs *carStructure) GenerateImage(axisQTY, numAxis int) string {
 
 	if axisQTY != 0 {
 		var croppedImg image.Image
 		if axisQTY == numAxis {
 			croppedImg = cs.FooterImage
-		} else if axisQTY == 1 && carType == "tractor" {
-			croppedImg = cs.HTractorImage
-		} else if axisQTY == 1 && carType == "trailer" {
-			croppedImg = cs.HTrailerImage
+		} else if axisQTY == 1 {
+			croppedImg = cs.HeaderImage
 		} else {
 			croppedImg = cs.BodyImage
 		}
