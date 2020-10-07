@@ -218,6 +218,27 @@ func (cs *carStructure) GetJsonResult() (Summary, error) {
 			if axisNo == 0 { //ยางอะไหล่
 				for a := 0; a < len(summary.Axles); a++ {
 					if summary.Axles[a].AxisID == 0 {
+						for _, policy := range cs.Policies {
+							if policy.AxlesNo == 2 {
+								if tire.TireDepth <= policy.CriticalTireDepth {
+									tire.PolicyStatus.TireDepth.Status = "critical"
+								} else if tire.TireDepth <= policy.WarningTireDepth {
+									tire.PolicyStatus.TireDepth.Status = "warning"
+								} else {
+									tire.PolicyStatus.TireDepth.Status = "good"
+								}
+
+								diff := Abs(tire.TirePressure-(policy.StandardTirePressure*0.9)) / policy.StandardTirePressure * 100
+
+								if diff >= policy.CriticalTirePressure {
+									tire.PolicyStatus.PSI.Status = "critical"
+								} else if diff >= policy.WarningTirePressure {
+									tire.PolicyStatus.PSI.Status = "warning"
+								} else {
+									tire.PolicyStatus.PSI.Status = "good"
+								}
+							}
+						}
 						summary.Axles[a].SpareWheel = append(summary.Axles[a].SpareWheel, tire)
 						break
 					}
